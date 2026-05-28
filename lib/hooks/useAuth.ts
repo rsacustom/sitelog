@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
-const ALLOWED_EMAIL = 'jberg99@icloud.com';
+const ALLOWED_EMAILS = new Set(['jberg99@icloud.com', 'rsacustom@gmail.com']);
 const COOKIE_MAX_AGE = 7 * 24 * 3600;
 
 export function useAuth() {
@@ -15,7 +15,7 @@ export function useAuth() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
-      if (u && u.email !== ALLOWED_EMAIL) {
+      if (u && !ALLOWED_EMAILS.has(u.email ?? '')) {
         await signOut(auth);
         return;
       }

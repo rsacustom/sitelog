@@ -10,11 +10,12 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
-const ALLOWED_EMAIL = 'jberg99@icloud.com';
+const ALLOWED_EMAILS = new Set(['jberg99@icloud.com', 'rsacustom@gmail.com']);
+const DEFAULT_EMAIL = 'jberg99@icloud.com';
 const COOKIE_MAX_AGE = 7 * 24 * 3600;
 
 export default function LoginPage() {
-  const [email, setEmail] = useState(ALLOWED_EMAIL);
+  const [email, setEmail] = useState(DEFAULT_EMAIL);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
@@ -26,7 +27,7 @@ export default function LoginPage() {
 
     if (isSignInWithEmailLink(auth, window.location.href)) {
       setCompleting(true);
-      const savedEmail = window.localStorage.getItem('emailForSignIn') || ALLOWED_EMAIL;
+      const savedEmail = window.localStorage.getItem('emailForSignIn') || DEFAULT_EMAIL;
       signInWithEmailLink(auth, savedEmail, window.location.href)
         .then(() => {
           window.localStorage.removeItem('emailForSignIn');
@@ -41,7 +42,7 @@ export default function LoginPage() {
     }
 
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (user && user.email === ALLOWED_EMAIL) {
+      if (user && ALLOWED_EMAILS.has(user.email ?? '')) {
         document.cookie = `sitelog-auth=1; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
         router.replace('/jobs');
       }
@@ -51,7 +52,7 @@ export default function LoginPage() {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email !== ALLOWED_EMAIL) {
+    if (!ALLOWED_EMAILS.has(email)) {
       setError('Unauthorized email address.');
       return;
     }
